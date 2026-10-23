@@ -1,5 +1,9 @@
 # 三容水箱过程控制 SCADA 系统
 
+[![CI](https://github.com/WviWei/three-tank-scada/actions/workflows/ci.yml/badge.svg)](https://github.com/WviWei/three-tank-scada/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 > 一个可完整运行的工业控制系统教学/演示项目：**现场对象仿真 → 软 PLC → Web SCADA** 三层架构，
 > 通过真实的 **Modbus TCP** 协议通信，重点解决双回路液位控制中的**交叉耦合**问题。
 
@@ -141,11 +145,16 @@ docker compose up --build
 ### 运行测试
 
 ```bash
+python -m pytest -q            # 单元测试，20 个用例，无需启动服务
+python -m ruff check .         # 代码规范
+
 python tools/smoke_plant.py    # 对象 + Modbus 从站
 python tools/smoke_loop.py     # 对象 + PLC 闭环（约 100 s）
 python tools/smoke_scada.py    # 端到端全链路（约 70 s）
 python tools/identify.py       # 辨识 + 解耦对比（离线仿真，数秒）
 ```
+
+CI 在每次 push 时自动执行 lint、单元测试与 Modbus 冒烟测试（见 `.github/workflows/ci.yml`）。
 
 ---
 
@@ -171,9 +180,11 @@ python tools/identify.py       # 辨识 + 解耦对比（离线仿真，数秒�
 | 0-1 | pump1/2_permille | SCADA / PLC | 泵指令，0-1000 |
 | 2 | plc_mode | SCADA | 0=MAN，1=AUTO |
 | 3-4 | sp1/sp2_mm | SCADA | 液位设定值 |
+| 5 | reset_cmd | SCADA | 写 1 确认报警，PLC 处理后自动清零 |
 | 6 | plc_heartbeat | PLC | 心跳，SCADA 据此判断 PLC 存活 |
-| 7 | plc_alarm_word | PLC | 报警字 |
+| 7 | plc_alarm_word | PLC | 活动报警字 |
 | 8-13 | PID 输出 / 偏差 / 解耦量 / 扫描周期 | PLC | 状态回读 |
+| 14 | alarm_latched | PLC | 锁存报警字，需操作员确认才清除 |
 
 所有浮点量按定点缩放传输（液位 ×1000 取 mm，流量 ×6e6 取 L/min×100）。
 
@@ -189,9 +200,12 @@ tank-scada/
 ├── scada/
 │   ├── main.py             # FastAPI + WebSocket + SQLite
 │   └── static/             # 前端（零构建，CDN 引 ECharts）
+├── tests/                  # 单元测试（pytest）
 ├── tools/                  # 冒烟测试 / 辨识 / 阶跃实验
-├── docs/                   # 实验数据
+├── docs/                   # 实验数据与演示动图
+├── .github/workflows/      # CI：lint + 单测 + Modbus 冒烟
 ├── run.py                  # 一键启动
+├── pyproject.toml          # pytest / ruff 配置
 ├── Dockerfile
 └── docker-compose.yml
 ```
@@ -208,6 +222,11 @@ tank-scada/
 
 **SCADA**：100 ms 采集，WebSocket 全量推送最新快照；
 SQLite WAL 模式，1 Hz 采样入库；报警按上升沿去重后落库。
+
+**报警管理**：PLC 对报警位做**锁存**（latch）—— 条件消失也不自动清除，
+避免瞬时故障被操作员错过。前端提供"确认报警"按钮，确认操作只清除
+**已经恢复正常**的位，仍在活动的报警保持锁存并继续显示。
+寄存器 7 存活动字、14 存锁存字，SCADA 据此区分"活动"与"待确认"两种状态。
 
 **前端**：零构建，静态 HTML + JS；ECharts 已本地化为
 `scada/static/vendor/echarts.min.js`，**完全离线可用**，不依赖任何 CDN。

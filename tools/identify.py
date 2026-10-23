@@ -134,10 +134,10 @@ def closed_loop(decouple: bool, total_s: float = 340.0) -> dict:
     cfg = PLCConfig(decouple_enable=decouple)
     plc = SoftPLC(cfg)
     plant, hr = new_state(mode=0)
-    sp1_base, sp2_base = 150, 130
+    _sp1_base, sp2_base = 150, 130
     sp1_step = 175
     t_auto, t_step = 60.0, 210.0
-    obs_s = total_s - t_step
+    total_s - t_step
 
     dt = PLANT_DT
     records: list[dict] = []

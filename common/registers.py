@@ -63,6 +63,7 @@ HR: dict[str, int] = {
     "pid2_err_mm": 11,       # 回路2 偏差, 带符号(补码)
     "decouple_term": 12,     # 解耦补偿量(千分比, 绝对值)
     "plc_scan_ms": 13,       # PLC 实际扫描周期
+    "alarm_latched": 14,     # 锁存报警字: 位一旦置位即保持, 直到操作员确认
 }
 
 #: 报警位定义

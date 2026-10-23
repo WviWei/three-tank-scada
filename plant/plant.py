@@ -5,7 +5,7 @@
         泵1 ----+--> T1 --\
                 |         |  q13 = c13*sqrt(max(0, h1-h3))
         泵2 ----+--> T2 --/   q23 = c23*sqrt(max(0, h2-h3))
-                          \--> T3 --> q3 = c3*sqrt(h3)  (排入地沟)
+                          \\--> T3 --> q3 = c3*sqrt(h3)  (排入地沟)
 
 T3 是两个回路的公共下游，因此 q1 抬高 h3 会反过来抑制 h2 的下泄，
 这就是本系统交叉耦合的物理来源，也是解耦补偿要消除的对象。
@@ -24,10 +24,10 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import os
-import sys
 import logging
 import math
+import os
+import sys
 import time
 from dataclasses import dataclass, fields
 

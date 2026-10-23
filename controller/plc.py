@@ -122,6 +122,11 @@ class SoftPLC:
         self.initialized = False
         self.heartbeat = 0
         self.alarm_word = 0
+        #: 锁存报警字。报警条件出现时置位, 即使条件消失也保持, 直到操作员确认。
+        #: 这是工业报警管理的基本要求 —— 瞬时故障不能被操作员错过。
+        self.latched = 0
+        #: 本轮扫描是否消费了确认指令(需要把 reset_cmd 写回 0)
+        self.ack_pending = False
         self.scan_ms = int(cfg.scan_s * 1000)
         self.decouple_term = 0
 
@@ -219,6 +224,17 @@ class SoftPLC:
             alarm |= R.ALARM_BITS["h3_overflow"]
         self.alarm_word = alarm
 
+        # ---------------------------------------------------------- 报警锁存与确认
+        # 1) 条件出现即锁存, 条件消失也不自动清除(瞬时故障不会漏掉)
+        self.latched |= alarm
+
+        # 2) 操作员确认: 只清除"已恢复正常且尚未确认"的位。
+        #    仍然活动的报警保持锁存 —— 故障还在就不该被确认掉。
+        self.ack_pending = False
+        if hr[R.HR["reset_cmd"]] == 1:
+            self.latched &= alarm
+            self.ack_pending = True
+
         self.heartbeat = (self.heartbeat + 1) & 0xFFFF
 
         status = [0] * (R.HR_SIZE - R.HR["plc_heartbeat"])
@@ -231,6 +247,7 @@ class SoftPLC:
         status[R.HR["pid2_err_mm"] - base] = R.to_signed16(err2)
         status[R.HR["decouple_term"] - base] = self.decouple_term
         status[R.HR["plc_scan_ms"] - base] = self.scan_ms
+        status[R.HR["alarm_latched"] - base] = self.latched
 
         return status, [out1, out2]
 
@@ -274,6 +291,10 @@ async def plc_loop(cfg: PLCConfig, host: str, port: int) -> None:
             if hr_rr.registers[R.HR["plc_mode"]] == 1:
                 await client.write_register(R.HR["pump1_permille"], pumps[0], slave=0)
                 await client.write_register(R.HR["pump2_permille"], pumps[1], slave=0)
+
+            # 确认指令是一次性的: 处理完立刻把命令位清零, 避免重复确认
+            if plc.ack_pending:
+                await client.write_register(R.HR["reset_cmd"], 0, slave=0)
 
             comm_fail = 0
         except Exception as exc:  # noqa: BLE001 - 现场通讯任何异常都要能自恢复

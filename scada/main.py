@@ -176,8 +176,13 @@ class ScadaService:
                 "online": self._plc_online(hr[R.HR["plc_heartbeat"]]),
             },
             "alarm_word": hr[R.HR["plc_alarm_word"]],
+            "alarm_latched": hr[R.HR["alarm_latched"]],
             "overflow": ir[R.IR["overflow"]],
             "alarms": self._alarm_list(hr[R.HR["plc_alarm_word"]]),
+            # 已恢复正常、但仍未被操作员确认的报警: 锁存位为1而活动位为0
+            "alarms_pending": self._alarm_list(
+                hr[R.HR["alarm_latched"]] & ~hr[R.HR["plc_alarm_word"]] & 0xFFFF
+            ),
         }
 
     def _plc_online(self, hb: int) -> bool:
@@ -297,6 +302,7 @@ svc = ScadaService()
 # ------------------------------------------------------------------ API
 class Command(BaseModel):
     mode: int | None = Field(default=None, ge=0, le=1)
+    reset: bool | None = Field(default=None, description="确认当前报警")
     sp1: int | None = Field(default=None, ge=20, le=320)
     sp2: int | None = Field(default=None, ge=20, le=320)
     pump1: int | None = Field(default=None, ge=0, le=1000)
@@ -362,6 +368,9 @@ async def post_command(cmd: Command) -> dict[str, Any]:
     if cmd.mode is not None:
         await svc.write_hr(R.HR["plc_mode"], cmd.mode)
         applied.append(f"mode={cmd.mode}")
+    if cmd.reset:
+        await svc.write_hr(R.HR["reset_cmd"], 1)
+        applied.append("ack_alarms")
     log.info("操作员指令: %s", ", ".join(applied))
     return {"ok": True, "applied": applied}
 

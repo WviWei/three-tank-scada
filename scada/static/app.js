@@ -180,8 +180,25 @@ function renderStatus(d) {
 
   const alarmChip = $("chip-alarm");
   const n = d.alarms ? d.alarms.length : 0;
-  alarmChip.className = "chip " + (n ? "bad" : "ok");
-  alarmChip.querySelector("span").textContent = n ? n + " 条报警" : "无报警";
+  const pending = d.alarms_pending ? d.alarms_pending.length : 0;
+  alarmChip.className = "chip " + (n || pending ? "bad" : "ok");
+  alarmChip.querySelector("span").textContent = n
+    ? n + " 条报警"
+    : pending
+      ? pending + " 条待确认"
+      : "无报警";
+}
+
+function renderAlarmPanel(d) {
+  const active = d.alarms || [];
+  const pending = d.alarms_pending || [];
+  const tags = [];
+  active.forEach((a) => tags.push(`<span class="al-tag lv${a.level}">${a.message}</span>`));
+  pending.forEach((a) =>
+    tags.push(`<span class="al-tag pending">${a.message}<i>待确认</i></span>`)
+  );
+  $("alarm-active").innerHTML = tags.join("");
+  $("ack-btn").disabled = !d.alarm_latched;
 }
 
 function syncControls(d) {
@@ -218,6 +235,7 @@ function render(d) {
   renderDiagram(d);
   renderReadouts(d);
   renderStatus(d);
+  renderAlarmPanel(d);
   syncControls(d);
 
   const last = state.buffer[state.buffer.length - 1];
@@ -321,6 +339,8 @@ async function loadAlarms() {
 
 /* ------------------------------------------------------------------ 交互 */
 function bindControls() {
+  $("ack-btn").onclick = () => sendCommand({ reset: true });
+
   document.querySelectorAll("#mode-switch button").forEach((btn) => {
     btn.onclick = () => {
       const mode = Number(btn.dataset.mode);

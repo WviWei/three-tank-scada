@@ -170,7 +170,7 @@ async def main() -> int:
     on, off = results[0], results[1]
 
     rows = [
-        ("T1 超调量 (%)", f"{on['overshoot_pct']}"), 
+        ("T1 超调量 (%)", f"{on['overshoot_pct']}"),
         ("T1 调节时间 (s)", f"{on['settle_s']}"),
         ("T2 受扰峰值 (mm)", f"{on['h2_disturbance_mm']}"),
         ("T1 稳态误差 (mm)", f"{on['steady_err_h1']}"),
@@ -209,7 +209,7 @@ async def main() -> int:
             for s in data["samples"]:
                 f.write(f"{key},{s['t']},{s['h1']},{s['h2']},{s['h3']},{s['u1']},{s['u2']}\n")
 
-    print(f"\n已写入 docs/step_response_realtime.json 与 docs/step_response.csv")
+    print("\n已写入 docs/step_response_realtime.json 与 docs/step_response.csv")
     return 0
 
 

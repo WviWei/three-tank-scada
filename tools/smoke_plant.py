@@ -79,8 +79,9 @@ async def main() -> int:
             print(f"[3] 液位响应方向: {'OK (上升)' if rising else 'FAIL (未上升)'}")
             ok &= rising
             q_last = samples[-1][3] / 100.0
-            print(f"[4] 泵1 实际流量 {q_last:.2f} L/min (期望趋近 3.60)")
-            ok &= 3.0 < q_last < 3.7
+            # 泵1 指令 60%, 单泵量程 9 L/min => 稳态应趋近 5.40 L/min
+            print(f"[4] 泵1 实际流量 {q_last:.2f} L/min (期望趋近 5.40)")
+            ok &= 5.2 < q_last < 5.6
 
         client.close()
     finally:
