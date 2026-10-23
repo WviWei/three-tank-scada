@@ -1,0 +1,27 @@
+services:
+  # 现场设备: 三容水箱对象 + Modbus TCP 从站
+  plant:
+    build: .
+    command: python -m plant.plant
+    ports:
+      - "5020:5020"
+
+  # 软 PLC: Modbus 主站, 双回路 PID + 静态解耦
+  plc:
+    build: .
+    command: python -m controller.plc
+    environment:
+      PLANT_HOST: plant
+    depends_on:
+      - plant
+
+  # SCADA 上位机: Web 监控 + 历史库
+  scada:
+    build: .
+    command: python -m scada.main
+    environment:
+      PLANT_HOST: plant
+    ports:
+      - "8000:8000"
+    depends_on:
+      - plant

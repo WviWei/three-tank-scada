@@ -1,0 +1,60 @@
+{
+  "plant_identification": {
+    "operating_point": {
+      "u1": 500,
+      "u2": 450,
+      "h1": 154.6,
+      "h2": 149.3
+    },
+    "gain_matrix": {
+      "g11": 0.427,
+      "g12": 0.2938,
+      "g21": 0.2938,
+      "g22": 0.4159
+    },
+    "rga": {
+      "lambda11": 1.9453,
+      "lambda12": -0.9453
+    },
+    "coupling_index": 0.4859,
+    "ideal_decouple_k": {
+      "k12": -0.688,
+      "k21": -0.7063
+    }
+  },
+  "experiment": {
+    "sp1_base": 150,
+    "sp2_base": 130,
+    "sp1_step": 175,
+    "auto_at_s": 60,
+    "step_at_s": 210
+  },
+  "decouple_on": {
+    "decouple": true,
+    "h1_base": 150.0,
+    "h2_base": 130.0,
+    "sp1_step": 175,
+    "sp2": 130,
+    "peak_h1": 176,
+    "overshoot_pct": 4.0,
+    "settle_s": 37.0,
+    "h2_disturbance_mm": 3.0,
+    "u2_swing": 111,
+    "final_h1": 175,
+    "final_h2": 130
+  },
+  "decouple_off": {
+    "decouple": false,
+    "h1_base": 150.0,
+    "h2_base": 130.1,
+    "sp1_step": 175,
+    "sp2": 130,
+    "peak_h1": 175,
+    "overshoot_pct": 0.0,
+    "settle_s": 112.0,
+    "h2_disturbance_mm": 4.9,
+    "u2_swing": 108,
+    "final_h1": 175,
+    "final_h2": 130
+  }
+}

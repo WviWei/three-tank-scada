@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三容水箱过程控制 SCADA</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">&#9672;</div>
+    <div>
+      <h1>三容水箱过程控制 SCADA</h1>
+      <p>Three-Tank Process Control &middot; Modbus TCP &middot; 双回路 PID + 静态解耦</p>
+    </div>
+  </div>
+  <div class="status-bar">
+    <div class="chip" id="chip-conn"><i></i><span>现场连接</span></div>
+    <div class="chip" id="chip-mode"><i></i><span>手动</span></div>
+    <div class="chip" id="chip-alarm"><i></i><span>无报警</span></div>
+  </div>
+</header>
+
+<main>
+  <section class="panel diagram">
+    <h2>工艺流程图 <small>P&amp;ID</small></h2>
+    <svg id="pid" viewBox="0 0 620 420" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.92"/>
+          <stop offset="100%" stop-color="#0284c7" stop-opacity="0.62"/>
+        </linearGradient>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#3f5878"/>
+        </marker>
+      </defs>
+
+      <!-- 管路 -->
+      <path class="pipe" d="M 78 120 H 106 V 18 H 170 V 30" marker-end="url(#arrow)"/>
+      <path class="pipe" d="M 78 300 H 90 V 8 H 370 V 30" marker-end="url(#arrow)"/>
+      <path class="pipe" d="M 170 210 V 244 H 250 V 270" marker-end="url(#arrow)"/>
+      <path class="pipe" d="M 370 210 V 244 H 310 V 270" marker-end="url(#arrow)"/>
+      <path class="pipe" d="M 270 380 V 406 H 340" marker-end="url(#arrow)"/>
+
+      <!-- 泵 -->
+      <g class="pump" id="pump1">
+        <circle cx="56" cy="120" r="22"/>
+        <text class="pump-tag" x="56" y="125">P1</text>
+      </g>
+      <g class="pump" id="pump2">
+        <circle cx="56" cy="300" r="22"/>
+        <text class="pump-tag" x="56" y="305">P2</text>
+      </g>
+      <text class="flow-tag" id="flow-p1" x="56" y="158">0.0 L/min</text>
+      <text class="flow-tag" id="flow-p2" x="56" y="338">0.0 L/min</text>
+
+      <!-- 水箱 T1 -->
+      <g>
+        <rect class="tank-body" x="120" y="30" width="100" height="180" rx="6"/>
+        <rect class="tank-water" id="water1" x="122" y="30" width="96" height="0" rx="4"/>
+        <line class="tank-sp" id="spmark1" x1="120" y1="210" x2="220" y2="210"/>
+        <text class="tank-label" x="170" y="22">T1</text>
+        <text class="tank-value" id="val1" x="170" y="122">0</text>
+        <text class="tank-unit" x="170" y="142">mm</text>
+      </g>
+
+      <!-- 水箱 T2 -->
+      <g>
+        <rect class="tank-body" x="320" y="30" width="100" height="180" rx="6"/>
+        <rect class="tank-water" id="water2" x="322" y="30" width="96" height="0" rx="4"/>
+        <line class="tank-sp" id="spmark2" x1="320" y1="210" x2="420" y2="210"/>
+        <text class="tank-label" x="370" y="22">T2</text>
+        <text class="tank-value" id="val2" x="370" y="122">0</text>
+        <text class="tank-unit" x="370" y="142">mm</text>
+      </g>
+
+      <!-- 水箱 T3 -->
+      <g>
+        <rect class="tank-body" x="220" y="270" width="120" height="110" rx="6"/>
+        <rect class="tank-water" id="water3" x="222" y="270" width="116" height="0" rx="4"/>
+        <text class="tank-label" x="280" y="262">T3</text>
+        <text class="tank-value" id="val3" x="280" y="330">0</text>
+        <text class="tank-unit" x="280" y="350">mm</text>
+      </g>
+
+      <text class="flow-tag" id="flow-q3" x="345" y="400">0.0 L/min</text>
+    </svg>
+    <div class="diagram-legend">
+      <span><b class="dot sp"></b>虚线为设定值</span>
+      <span><b class="dot hi"></b>高液位报警 320 mm</span>
+      <span>溢流液位 350 mm</span>
+    </div>
+  </section>
+
+  <section class="panel controls">
+    <h2>操作面板 <small>Operator Station</small></h2>
+
+    <div class="field">
+      <label>控制模式</label>
+      <div class="segmented" id="mode-switch">
+        <button data-mode="0" class="active">手动 MAN</button>
+        <button data-mode="1">自动 AUTO</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>T1 设定值 <output id="sp1-out">150 mm</output></label>
+      <input type="range" id="sp1" min="20" max="320" step="1" value="150">
+    </div>
+
+    <div class="field">
+      <label>T2 设定值 <output id="sp2-out">100 mm</output></label>
+      <input type="range" id="sp2" min="20" max="320" step="1" value="100">
+    </div>
+
+    <div class="field">
+      <label>泵 P1 手动输出 <output id="p1-out">50.0 %</output></label>
+      <input type="range" id="pump1" min="0" max="1000" step="5" value="500">
+    </div>
+
+    <div class="field">
+      <label>泵 P2 手动输出 <output id="p2-out">45.0 %</output></label>
+      <input type="range" id="pump2" min="0" max="1000" step="5" value="450">
+    </div>
+
+    <div class="readouts">
+      <div class="ro"><span>P1 控制输出</span><b id="ro-out1">0</b><i>&permil;</i></div>
+      <div class="ro"><span>P2 控制输出</span><b id="ro-out2">0</b><i>&permil;</i></div>
+      <div class="ro"><span>T1 偏差</span><b id="ro-err1">0</b><i>mm</i></div>
+      <div class="ro"><span>T2 偏差</span><b id="ro-err2">0</b><i>mm</i></div>
+      <div class="ro"><span>解耦补偿</span><b id="ro-dec">0</b><i>&permil;</i></div>
+      <div class="ro"><span>PLC 扫描</span><b id="ro-scan">0</b><i>ms</i></div>
+    </div>
+  </section>
+
+  <section class="panel trend">
+    <h2>实时趋势 <small>液位 / mm</small></h2>
+    <div id="chart"></div>
+  </section>
+
+  <section class="panel alarms">
+    <h2>报警记录 <small>Alarm Log</small></h2>
+    <ul id="alarm-list"><li class="empty">暂无报警</li></ul>
+  </section>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
