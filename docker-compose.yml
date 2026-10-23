@@ -21,7 +21,6 @@ services:
     command: python -m scada.main
     environment:
       PLANT_HOST: plant
-      PORT: "8000"
     ports:
       - "8000:8000"
     depends_on:

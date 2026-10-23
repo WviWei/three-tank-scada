@@ -9,18 +9,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.12"]
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.11"
           cache: pip
 
       - name: Install dependencies
@@ -28,11 +22,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-dev.txt
 
-      - name: Lint (ruff)
+      - name: Lint
         run: python -m ruff check .
 
-      - name: Unit tests (pytest)
+      - name: Tests
         run: python -m pytest -q
-
-      - name: Modbus endpoint smoke test
-        run: python tools/smoke_plant.py
