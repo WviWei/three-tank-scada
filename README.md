@@ -6,9 +6,9 @@
 控制算法、通讯协议、上位机界面三者解耦，每个进程都可以独立启动、独立观测，
 与真实工业现场的层次划分一致。
 
-![系统演示：切换 AUTO 后双回路收敛到设定值](docs/demo.gif)
+![系统演示：切换 AUTO 后双回路收敛到设定值](docs/demo-system.gif)
 
-<sub>GitHub 会默认暂停动图，**点击图片即可播放**；也可以[直接打开原始动图](https://raw.githubusercontent.com/WviWei/three-tank-scada/main/docs/demo.gif)。</sub>
+<sub>GitHub 会默认暂停动图，**点击图片即可播放**；也可以[直接打开原始动图](https://raw.githubusercontent.com/WviWei/three-tank-scada/main/docs/demo-system.gif)。</sub>
 
 ---
 
