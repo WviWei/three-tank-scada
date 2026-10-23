@@ -3,6 +3,7 @@
 [![CI](https://github.com/WviWei/three-tank-scada/actions/workflows/ci.yml/badge.svg)](https://github.com/WviWei/three-tank-scada/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/WviWei/three-tank-scada)
 
 > 一个可完整运行的工业控制系统教学/演示项目：**现场对象仿真 → 软 PLC → Web SCADA** 三层架构，
 > 通过真实的 **Modbus TCP** 协议通信，重点解决双回路液位控制中的**交叉耦合**问题。
@@ -121,6 +122,19 @@ T2 的下泄压差 (h2−h3) 被压缩，于是 h2 被动上升 —— 这就是
 ---
 
 ## 五、快速开始
+
+### 在线试玩（无需安装任何环境）
+
+点击上方 **Open in GitHub Codespaces** 徽章，或直接访问：
+
+<https://codespaces.new/WviWei/three-tank-scada>
+
+容器会自动安装依赖并拉起整套系统（约 1 分钟），随后浏览器直接打开监控画面。
+若页面没有自动弹出，在底部 **PORTS** 面板找到 8000 端口，点转发地址即可。
+
+服务日志：`tail -f /tmp/scada.log`；手动重启：`pkill -f "python -u run.py" && python -u run.py`。
+
+> Codespaces 免费额度为个人账号每月 60 小时，长时间不操作会自动休眠，不影响演示。
 
 ### 本地运行（无需 Docker）
 

@@ -1,0 +1,25 @@
+{
+  "name": "Three-Tank SCADA (PLC 过程控制演示)",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "postCreateCommand": "python -m pip install --upgrade pip && python -m pip install -r requirements.txt",
+  "postStartCommand": "bash -lc 'pgrep -f \"python -u run.py\" > /dev/null || (nohup python -u run.py > /tmp/scada.log 2>&1 &)'",
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "SCADA 监控画面",
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python", "ms-python.vscode-pylance"],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      }
+    }
+  },
+  "hostRequirements": {
+    "cpus": 2
+  }
+}
