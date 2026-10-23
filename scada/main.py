@@ -47,9 +47,10 @@ PUSH_S = 0.1            # WebSocket 推送周期
 HISTORY_S = 1.0         # 历史入库周期
 PLC_TIMEOUT_S = 3.0     # 心跳停止多久判定 PLC 离线
 
+# 与 plant.DEFAULT_HR 保持一致, 避免 SCADA 先于对象启动时显示另一组数字
 DEFAULTS = {
-    "pump1_permille": 500,
-    "pump2_permille": 450,
+    "pump1_permille": 350,
+    "pump2_permille": 320,
     "plc_mode": 0,
 }
 
