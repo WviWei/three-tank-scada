@@ -125,16 +125,26 @@ T2 的下泄压差 (h2−h3) 被压缩，于是 h2 被动上升 —— 这就是
 
 ### 在线试玩（无需安装任何环境）
 
-点击上方 **Open in GitHub Codespaces** 徽章，或直接访问：
+#### 方式一：部署到公网（推荐，打开即用）
 
-<https://codespaces.new/WviWei/three-tank-scada>
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/WviWei/three-tank-scada)
 
-容器会自动安装依赖并拉起整套系统（约 1 分钟），随后浏览器直接打开监控画面。
-若页面没有自动弹出，在底部 **PORTS** 面板找到 8000 端口，点转发地址即可。
+Render 会读取仓库根目录的 `render.yaml`, 自动完成构建与启动, 得到一个固定网址。
+任何人点开即可操作, **无需登录、无需等待构建**。
 
-服务日志：`tail -f /tmp/scada.log`；手动重启：`pkill -f "python -u run.py" && python -u run.py`。
+免费实例连续 15 分钟无访问会休眠, 下次访问冷启动约 30 秒。
 
-> Codespaces 免费额度为个人账号每月 60 小时，长时间不操作会自动休眠，不影响演示。
+#### 方式二：GitHub Codespaces（适合读代码、改参数）
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/WviWei/three-tank-scada)
+
+容器会自动安装依赖并启动系统, 首次构建约 2～4 分钟（拉取开发镜像）。
+若浏览器没有自动打开画面, 在底部 **PORTS** 面板找到 8000 端口点转发地址即可。
+
+- 查看日志: `tail -f /tmp/scada.log`
+- 手动重启: `pkill -f "python -u run.py"; python -u run.py`
+
+> Codespaces 免费额度为个人账号每月 60 小时, 长时间不操作会自动休眠。
 
 ### 本地运行（无需 Docker）
 
@@ -218,6 +228,8 @@ tank-scada/
 ├── tools/                  # 冒烟测试 / 辨识 / 阶跃实验
 ├── docs/                   # 实验数据与演示动图
 ├── .github/workflows/      # CI：lint + 单测 + Modbus 冒烟
+├── .devcontainer/          # Codespaces 在线开发环境
+├── render.yaml             # Render 一键部署配置
 ├── run.py                  # 一键启动
 ├── pyproject.toml          # pytest / ruff 配置
 ├── Dockerfile
