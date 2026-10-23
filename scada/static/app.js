@@ -24,7 +24,24 @@ const state = {
   lastChartDraw: 0,
   userTouched: 0,
   initialized: false,
+  lastCmd: "",
+  lastEvent: "",
 };
+
+/* 诊断模式: 地址后加 ?debug=1 打开, 底部实时显示控件状态 */
+const DEBUG = new URLSearchParams(location.search).has("debug");
+let dbgBar = null;
+if (DEBUG) {
+  dbgBar = document.createElement("div");
+  dbgBar.style.cssText =
+    "position:fixed;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,.9);" +
+    "color:#4ade80;font:12px/1.7 monospace;padding:8px 12px;white-space:pre-wrap;" +
+    "border-top:1px solid #334155";
+  document.body.appendChild(dbgBar);
+}
+function dbg(txt) {
+  if (dbgBar) dbgBar.textContent = txt;
+}
 
 /* ------------------------------------------------------------------ 图表 */
 function initChart() {
@@ -144,8 +161,8 @@ function renderDiagram(d) {
   m2.setAttribute("y2", y2.toFixed(1));
 
   // 泵状态
-  const p1 = $("pump1");
-  const p2 = $("pump2");
+  const p1 = $("pumpSym1");
+  const p2 = $("pumpSym2");
   p1.classList.toggle("running", d.flows.q1 > 0.05);
   p2.classList.toggle("running", d.flows.q2 > 0.05);
   $("flow-p1").textContent = d.flows.q1.toFixed(1) + " L/min";
@@ -206,13 +223,30 @@ function syncControls(d) {
   const auto = d.mode === 1;
   $("pump1").disabled = auto;
   $("pump2").disabled = auto;
+  const hint = $("mode-hint");
+  if (hint) hint.style.display = auto ? "none" : "block";
 
   document.querySelectorAll("#mode-switch button").forEach((b) => {
     b.classList.toggle("active", Number(b.dataset.mode) === d.mode);
   });
 
-  // 用户正在拖动时不要回写, 避免"跟手"打架
-  if (Date.now() - state.userTouched > 1500) {
+  // 用户正在拖动时不要回写, 避免"跟手"打架。
+  // 除了时间窗, 还要检查焦点: 只要滑块还能接收键盘/指针输入, 就以用户为准。
+  const sliderIds = ["sp1", "sp2", "pump1", "pump2"];
+  const focused = document.activeElement && sliderIds.includes(document.activeElement.id);
+  if (DEBUG) {
+    const p1 = $("pump1");
+    dbg(
+      "JS v3  debug | mode=" + d.mode +
+      " | pump1.disabled=" + p1.disabled +
+      " | pump1.value=" + p1.value +
+      " | focus=" + (document.activeElement ? document.activeElement.id || document.activeElement.tagName : "-") +
+      " | 用户操作=" + (state.userTouched ? Math.round((Date.now() - state.userTouched)) + "ms 前" : "无") +
+      " | 最近事件=" + (state.lastEvent || "无") +
+      " | 最近指令=" + (state.lastCmd || "无")
+    );
+  }
+  if (!focused && Date.now() - state.userTouched > 1500) {
     const sp1 = $("sp1");
     const sp2 = $("sp2");
     sp1.value = d.sp.sp1;
@@ -283,17 +317,21 @@ function connect() {
 }
 
 async function sendCommand(payload) {
+  const label = JSON.stringify(payload);
   try {
     const r = await fetch("/api/command", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+    state.lastCmd = label + " → HTTP " + r.status;
     if (!r.ok) {
       const txt = await r.text();
+      state.lastCmd += " " + txt.slice(0, 80);
       console.warn("指令失败", txt);
     }
   } catch (e) {
+    state.lastCmd = label + " → 异常 " + e.message;
     console.warn("指令发送异常", e);
   }
 }
@@ -339,7 +377,10 @@ async function loadAlarms() {
 
 /* ------------------------------------------------------------------ 交互 */
 function bindControls() {
-  $("ack-btn").onclick = () => sendCommand({ reset: true });
+  // 逐个容错: 任一元素缺失都不能中断其余控件的绑定,
+  // 否则整个操作面板会静默失效。
+  const ackBtn = $("ack-btn");
+  if (ackBtn) ackBtn.onclick = () => sendCommand({ reset: true });
 
   document.querySelectorAll("#mode-switch button").forEach((btn) => {
     btn.onclick = () => {
@@ -350,16 +391,29 @@ function bindControls() {
     };
   });
 
+  // 拖动过程中就发命令(150 ms 防抖), 而不是等松手才发 ——
+  // 否则用户拖了半天看不到任何变化, 会以为控件坏了。
   const bindSlider = (id, outId, transform, payloadKey) => {
     const el = $(id);
     const out = $(outId);
+    let timer = null;
+
+    const flush = () => {
+      clearTimeout(timer);
+      timer = null;
+      sendCommand({ [payloadKey]: Number(el.value) });
+    };
+
     el.addEventListener("input", () => {
       state.userTouched = Date.now();
+      state.lastEvent = id + " input=" + el.value;
       out.textContent = transform(Number(el.value));
+      clearTimeout(timer);
+      timer = setTimeout(flush, 150);
     });
-    el.addEventListener("change", () => {
-      sendCommand({ [payloadKey]: Number(el.value) });
-    });
+
+    // 松开鼠标立即发送, 不必等防抖计时
+    el.addEventListener("change", flush);
   };
 
   bindSlider("sp1", "sp1-out", (v) => v + " mm", "sp1");

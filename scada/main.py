@@ -392,12 +392,26 @@ async def websocket_endpoint(ws: WebSocket) -> None:
         svc.clients.discard(ws)
 
 
+NO_CACHE = {"Cache-Control": "no-cache, must-revalidate"}
+
+
 @app.get("/")
 async def index() -> FileResponse:
-    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+    # 首页同样禁止缓存: 前后端版本必须一起刷新, 否则会出现"旧 HTML + 新 JS"
+    # 的组合, 引发元素不存在导致的初始化异常。
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"), headers=NO_CACHE)
 
 
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+class NoCacheStaticFiles(StaticFiles):
+    """静态资源不缓存 —— 演示项目经常热改前端, 浏览器缓存会导致改了看不到。"""
+
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        return response
+
+
+app.mount("/static", NoCacheStaticFiles(directory=STATIC_DIR), name="static")
 
 
 def main() -> None:

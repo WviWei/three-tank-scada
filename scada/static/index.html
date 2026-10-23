@@ -46,11 +46,11 @@
       <path class="pipe" d="M 270 380 V 406 H 340" marker-end="url(#arrow)"/>
 
       <!-- 泵 -->
-      <g class="pump" id="pump1">
+      <g class="pump" id="pumpSym1">
         <circle cx="56" cy="120" r="22"/>
         <text class="pump-tag" x="56" y="125">P1</text>
       </g>
-      <g class="pump" id="pump2">
+      <g class="pump" id="pumpSym2">
         <circle cx="56" cy="300" r="22"/>
         <text class="pump-tag" x="56" y="305">P2</text>
       </g>
@@ -106,14 +106,16 @@
       </div>
     </div>
 
+    <p class="mode-hint" id="mode-hint">手动模式下：泵输出直接控制流量；设定值仅预置，切到 AUTO 后才参与控制。</p>
+
     <div class="field">
       <label>T1 设定值 <output id="sp1-out">150 mm</output></label>
       <input type="range" id="sp1" min="20" max="320" step="1" value="150">
     </div>
 
     <div class="field">
-      <label>T2 设定值 <output id="sp2-out">100 mm</output></label>
-      <input type="range" id="sp2" min="20" max="320" step="1" value="100">
+      <label>T2 设定值 <output id="sp2-out">130 mm</output></label>
+      <input type="range" id="sp2" min="20" max="320" step="1" value="130">
     </div>
 
     <div class="field">
@@ -148,6 +150,6 @@
   </section>
 </main>
 
-<script src="/static/app.js"></script>
+<script src="/static/app.js?v=3"></script>
 </body>
 </html>
