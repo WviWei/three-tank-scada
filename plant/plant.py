@@ -145,8 +145,8 @@ class ThreeTankPlant:
 # ------------------------------------------------------------------ Modbus
 #: 上电默认指令: 模拟装置上次停车时的状态(两泵半开, MAN 模式)
 DEFAULT_HR: dict[str, int] = {
-    "pump1_permille": 500,
-    "pump2_permille": 450,
+    "pump1_permille": 350,
+    "pump2_permille": 320,
     "plc_mode": 0,
     "sp1_mm": 150,
     "sp2_mm": 130,
