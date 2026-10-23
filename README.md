@@ -205,8 +205,8 @@ tank-scada/
 **SCADA**：100 ms 采集，WebSocket 全量推送最新快照；
 SQLite WAL 模式，1 Hz 采样入库；报警按上升沿去重后落库。
 
-**前端**：零构建，静态 HTML + JS；ECharts 从 CDN 加载（离线部署时
-把 `echarts.min.js` 放进 `scada/static/` 并改 `index.html` 引用即可）。
+**前端**：零构建，静态 HTML + JS；ECharts 已本地化为
+`scada/static/vendor/echarts.min.js`，**完全离线可用**，不依赖任何 CDN。
 
 ---
 
